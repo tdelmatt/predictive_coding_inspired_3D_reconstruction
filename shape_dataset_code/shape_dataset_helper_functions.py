@@ -5,7 +5,6 @@ import plotly.graph_objects as go
 from scipy import ndimage
 import os
 import imageio
-#import plotly.express as px
 
 
 def within_ellipsoid(x,y,z, xlim,ylim,zlim):

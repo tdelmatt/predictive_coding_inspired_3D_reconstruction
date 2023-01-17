@@ -1,16 +1,11 @@
 import numpy as np
 import tensorflow as tf
-#import matplotlib.pyplot as plt
-#from pix2pix import Pix2pix
 import time
 import sys
 import os
 import csv
-#import get_metrics
 import pickle
 
-
-# example of pix2pix gan for satellite to map image-to-image translation
 from numpy import load
 from numpy import zeros
 from numpy import ones
@@ -31,30 +26,14 @@ from keras.layers import Lambda
 import keras
 
 
-
-
 # select a batch of random samples, returns images and target
 def generate_real_samples(A, B, batch_size, patch_shape1, patch_shape2):
-
-    #rnd_arr = np.random.permutation(B.shape[0])
-    #f32 = tuple(rnd_arr[:batch_size]) 
-    #a = A[f32, :, :, :].reshape(batch_size, im_rows, im_cols, A.shape[3])
-    
-    #a = a1[:,:,:,asub]
-    #print("a shape is {}".format(a.shape))
-    #b1 = B[f32,:,:,:].reshape(batch_size, b_rows, b_cols, B.shape[3])
-    #b = (2. * b1 - 1.)#.reshape(batch_size, im_rows, im_cols, n_output_channels)
-    #print("b shape is {}".format(b.shape))
-
-    #????
-    #
     y = ones((batch_size, patch_shape1, patch_shape2, 1))
     return [A, B], y
- 
+
+
 # generate a batch of images, returns images and targets
 def generate_fake_samples(g_model, samples, patch_shape1, patch_shape2):
-    # generate fake instance
-    
     #add output here for generator
     X, rot,_,_ = g_model.predict(samples)
     # create 'fake' class labels (0)
@@ -64,9 +43,7 @@ def generate_fake_samples(g_model, samples, patch_shape1, patch_shape2):
 
 def train_model(A,B, rot_array, pos_array, shape_array, 
         batch_size, patch_shape1, patch_shape2, d_model, g_model, gan_model):
-        
-        #def generate_real_samples(A, B, asub, bsub, batch_size, patch_shape):
-        
+
         #just A and B
         [X_realA, X_realB], y_real = generate_real_samples(A, B, batch_size, patch_shape1, patch_shape2)
         # generate a batch of fake samples
@@ -96,6 +73,7 @@ def train_model(A,B, rot_array, pos_array, shape_array,
 
         return d_loss1, d_loss2, g_loss, pixel_loss, rot_loss_1, rot_loss_2, shape_loss
 
+
 def train_hybrid(A,B, halfB, rot_array, pos_array, shape_array, 
         batch_size, patch_shape1, patch_shape2, td_g_model, d_model, g_model, pc_arch_model):
         
@@ -120,18 +98,13 @@ def train_hybrid(A,B, halfB, rot_array, pos_array, shape_array,
         # update the generator
         rot_1 = rot_array[:,0]
         rot_2 = rot_array[:,1]
+
         #fake array
-        #rot_1 = np.array([0,1,0,0])
-        
-        #[in_src,in_gen], [dis_out, gen_out, rot_out1, rot_out2, shape_out]
-        #define_pcarch(td_g_model, g_model, d_model, half_image_shape, output_image_shape, final_gen_activation, 
-        #       take_difference = True, learning_rate = 0.0002)
         ones = np.ones(halfB.shape)
         p5s = np.ones(halfB.shape) * .5
         g_loss, pixel_loss, rot_loss_1, rot_loss_2, shape_loss,_ =\
                         pc_arch_model.train_on_batch([halfB, X_fakeB, ones, p5s],
                         [y_real, X_realB, rot_1, rot_2, shape_array])
-        # summarize performance
 
         return d_loss1, d_loss2, g_loss, pixel_loss, rot_loss_1, rot_loss_2, shape_loss
         
@@ -148,8 +121,8 @@ def define_discriminator(input_image_shape, output_image_shape, learning_rate = 
     
     #CHANGES...COMMENTED OUT MERGED, AND CONCAT, INPUT AT C256
     #merged = Concatenate()([in_src_image, in_target_image])
+
     # C64
-    
     #input changed from merged to in_src_image
     d = Conv2D(32, (4,4), strides=(2,2), padding='same', kernel_initializer=init)(in_src_image)
     d = LeakyReLU(alpha=0.2)(d)
@@ -175,7 +148,6 @@ def define_discriminator(input_image_shape, output_image_shape, learning_rate = 
     
     #8 by 8
     #bug found, input changed from merged2 to d (so this was skipping the prevous two layers)
-    
     d = Conv2D(256, (4,4), strides=(2,2), padding='same', kernel_initializer=init)(d)
     d = BatchNormalization()(d)
     d = LeakyReLU(alpha=0.2)(d)
@@ -201,8 +173,6 @@ def define_discriminator(input_image_shape, output_image_shape, learning_rate = 
     return model
 
 
-
-
 # define an encoder block
 def define_encoder_block(layer_in, n_filters, batchnorm=True):
     # weight initialization
@@ -215,8 +185,6 @@ def define_encoder_block(layer_in, n_filters, batchnorm=True):
     # leaky relu activation
     g = LeakyReLU(alpha=0.2)(g)
     return g
-
-
 
 
 # define a decoder block
@@ -235,7 +203,8 @@ def decoder_block(layer_in, skip_in, n_filters, dropout=True):
     # relu activation
     g = Activation('relu')(g)
     return g
- 
+
+
 # define the standalone generator model
 def define_generator(image_shape, n_output_channels, final_gen_activation):
     # weight initialization
@@ -312,8 +281,6 @@ def define_generator(image_shape, n_output_channels, final_gen_activation):
     return model
 
 
-
-
 # define the combined generator and discriminator model, for updating the generator
 def define_gan(g_model, d_model, image_shape, final_gen_activation, learning_rate = 0.0002):
     # make weights in the discriminator not trainable
@@ -351,7 +318,7 @@ def define_gan(g_model, d_model, image_shape, final_gen_activation, learning_rat
     return model
     
     
-    # define the combined generator and discriminator model, for updating the generator
+# define the combined generator and discriminator model, for updating the generator
 def define_pcarch(td_g_model, g_model, d_model, half_image_shape, output_image_shape, final_gen_activation, 
                 take_difference = True, learning_rate = 0.0002):
     # make weights in the discriminator not trainable
@@ -366,12 +333,9 @@ def define_pcarch(td_g_model, g_model, d_model, half_image_shape, output_image_s
     ones = Input(shape=half_image_shape)
     p5s = Input(shape=half_image_shape)
     #zeros = Input(shape=half_image_shape)
-    
-    
-    # connect the source image to the generator input
 
+    # connect the source image to the generator input
     # src image as input, generated image and classification output
-    
     td_predict_2d =td_g_model(in_gen)
     
     td_predict_2d = keras.layers.Add()([td_predict_2d, ones])

@@ -16,8 +16,6 @@ if not os.path.isdir(saved):
 data_3d = np.load(saved + ".npy")
 
 print("min:{} max:{} mean:{}".format(np.min(data_3d),np.max(data_3d),np.mean(data_3d)))
-
-#data_3d = np.round(data_3d)
 print("min:{} max:{} mean:{}".format(np.min(data_3d),np.max(data_3d),np.mean(data_3d)))
 
 data_3d[(data_3d >= .6)] = 1
@@ -28,4 +26,4 @@ print(data_3d[0].shape)
 x,y,z = np.meshgrid(np.linspace(-1,1,64), np.linspace(-1,1,64), np.linspace(-1,1,64))
 #for i in range(0,data_3d.shape[0]):
 for i in [3,14,15]:
-    pfig(data_3d[i], x,y,z,savename = saved + "/{}.png".format(i),display = False, save = True)
+    plot_3d(data_3d[i], x, y, z, savename=saved + "/{}.png".format(i), display=False, save=True)

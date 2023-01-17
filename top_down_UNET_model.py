@@ -1,16 +1,11 @@
 import numpy as np
 import tensorflow as tf
-#import matplotlib.pyplot as plt
-#from pix2pix import Pix2pix
 import time
 import sys
 import os
 import csv
-#import get_metrics
 import pickle
 
-
-# example of pix2pix gan for satellite to map image-to-image translation
 from numpy import load
 from numpy import zeros
 from numpy import ones
@@ -31,21 +26,8 @@ from keras.layers import Lambda
 import keras
 
 
-
-#load and prepare training images
-#def load_real_samples(filename):
-    # load compressed arrays
-    #data = load(filename)
-    # unpack arrays
-    #X1, X2 = data['arr_0'], data['arr_1']
-    # scale from [0,255] to [-1,1]
-    #X1 = (X1 - 127.5) / 127.5
-    #X2 = (X2 - 127.5) / 127.5
-    #return [X1, X2]
- 
 # select a batch of random samples, returns images and target
 def generate_real_samples(A, B, batch_size, patch_shape1, patch_shape2):
-
 
     B = (2. * B - 1.)#.reshape(batch_size, im_rows, im_cols, n_output_channels)
     #print("b shape is {}".format(b.shape))
@@ -57,6 +39,7 @@ def generate_real_samples(A, B, batch_size, patch_shape1, patch_shape2):
  
 # generate a batch of images, returns images and targets
 def generate_fake_samples(g_model, samples, patch_shape1, patch_shape2):
+
     # generate fake instance
     X = g_model.predict(samples)
     # create 'fake' class labels (0)
@@ -64,10 +47,7 @@ def generate_fake_samples(g_model, samples, patch_shape1, patch_shape2):
     return X, y
 
 def train_model(A,B, batch_size, patch_shape1, patch_shape2, d_model, g_model, gan_model):
-        #print("top trained model")
-        #print(d_model)
-        #print(g_model)
-        #print(gan_model)
+
         #def generate_real_samples(A, B, asub, bsub, batch_size, patch_shape):
         [X_realA, X_realB], y_real = generate_real_samples(A, B, batch_size, patch_shape1, patch_shape2)
         # generate a batch of fake samples
@@ -76,27 +56,12 @@ def train_model(A,B, batch_size, patch_shape1, patch_shape2, d_model, g_model, g
         # update discriminator for real samples
         d_loss1 = d_model.train_on_batch([X_realA, X_realB], y_real)
         # update discriminator for generated samples
-        #print("dloss1 {}".format(d_loss1))
-        #print("dloss2 {}".format(d_loss2))
-
-        
         d_loss2 = d_model.train_on_batch([X_realA, X_fakeB], y_fake)
-        #print("dloss2 {}".format(d_loss2))
-        #print("this happened")
-        # update the generator
-        #print(patch_shape1, patch_shape2)
-        #print(X_fakeB.shape)
-        #print(y_real.shape)
-        #print(X_realB.shape)
-        
-        
-        
+
         g_loss, _, _ = gan_model.train_on_batch(X_realA, [y_real, X_realB])
         return d_loss1, d_loss2, g_loss
-        # summarize performance
 
-        
-        
+
 def define_discriminator(input_image_shape, output_image_shape):
     #initialize the weights
     init = RandomNormal(stddev=0.02)
@@ -108,8 +73,7 @@ def define_discriminator(input_image_shape, output_image_shape):
     
     #2d (output)
     in_target_image = Input(shape=output_image_shape)
-    # concatenate images channel-wise
-    #merged = Concatenate()([in_src_image, in_target_image])
+
     # C64
     d = Conv2D(32, (4,4), strides=(2,2), padding='same', kernel_initializer=init)(in_target_image)
     d = LeakyReLU(alpha=0.2)(d)
@@ -118,10 +82,9 @@ def define_discriminator(input_image_shape, output_image_shape):
     d = BatchNormalization()(d)
     d = LeakyReLU(alpha=0.2)(d)
     
-        #64 by 64
+    #64 by 64
     merged2 = Concatenate()([d, in_src_image])
-    
-    
+
     # C256
     d = Conv2D(128, (4,4), strides=(2,2), padding='same', kernel_initializer=init)(merged2)
     d = BatchNormalization()(d)
@@ -144,12 +107,7 @@ def define_discriminator(input_image_shape, output_image_shape):
     d = Conv2D(512, (4,4), strides=(2,2), padding='same', kernel_initializer=init)(d)
     d = BatchNormalization()(d)
     d = LeakyReLU(alpha=0.2)(d)
-    
-    
-    
-    
-    
-    
+
     # patch output
     d = Conv2D(1, (4,4), padding='same', kernel_initializer=init)(d)
     patch_out = Activation('sigmoid')(d)
@@ -161,10 +119,9 @@ def define_discriminator(input_image_shape, output_image_shape):
     return model
 
 
-
-
 # define an encoder block
 def define_encoder_block(layer_in, n_filters, batchnorm=True):
+
     # weight initialization
     init = RandomNormal(stddev=0.02)
     # add downsampling layer
@@ -175,7 +132,8 @@ def define_encoder_block(layer_in, n_filters, batchnorm=True):
     # leaky relu activation
     g = LeakyReLU(alpha=0.2)(g)
     return g
- 
+
+
 # define a decoder block
 def decoder_block(layer_in, skip_in, n_filters, dropout=True):
     # weight initialization
@@ -193,7 +151,8 @@ def decoder_block(layer_in, skip_in, n_filters, dropout=True):
     # relu activation
     g = Activation('relu')(g)
     return g
- 
+
+
 def decoder_block_no_skip(layer_in, n_filters, dropout=True):
     # weight initialization
     init = RandomNormal(stddev=0.02)

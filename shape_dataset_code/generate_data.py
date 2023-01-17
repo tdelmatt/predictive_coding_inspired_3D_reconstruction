@@ -6,8 +6,6 @@ from scipy import ndimage
 import os
 import imageio
 from get_fig import *
-#import plotly.express as px
-
 from shape_dataset_helper_functions import *
 from shape_dataset_code.plot_3d import *
 import gc
@@ -21,10 +19,12 @@ def generate_shape_data(n_shapes,rot_z = True, rot_y = True, xres = 64, yres = 6
     
     for i in range(1000):
         new_dir = savedir + '/' + "batch_{}".format(i)
+
         if not os.path.isdir(new_dir):
             os.mkdir(new_dir)
             savedir = new_dir
             break
+
         if i == 999:
             raise Exception("Ran out of batch files or some other error may need to expand length of for loop")
         
@@ -40,9 +40,6 @@ def generate_shape_data(n_shapes,rot_z = True, rot_y = True, xres = 64, yres = 6
     for i in range(n_shapes):
 
         x_temp = x; y_temp = y; z_temp = z;
-
-        #constrain shapes to be asymmetric and generate symmetric shapes 
-        #as a different label
         
         #RANDOM ROTATION
         #list z rotations
@@ -75,15 +72,10 @@ def generate_shape_data(n_shapes,rot_z = True, rot_y = True, xres = 64, yres = 6
         shape = shape_type_list[shape_ind]
         #shape = 'octahedron'
         print("shape is {}".format(shape))
-
-
-
         res_arr = np.linspace(-1,1,64)
         
         #randomly select shape parameters
         #obtain 3d shape matrix (vals) using generated random params
-            
-        #if cuboid
         if shape == 'cuboid':
             height = np.random.randint(30,55)
             zmin, zmax = split(height, zres)
@@ -109,8 +101,7 @@ def generate_shape_data(n_shapes,rot_z = True, rot_y = True, xres = 64, yres = 6
             shape_data = np.array([z_rot, y_rot, 0, xmin, xmax, 
                                    ymin, ymax, zmin, zmax ])
             
-            
-        #if ellipsoid
+
         elif shape == 'ellipsoid':
             height = np.random.randint(35,55)
             
@@ -129,12 +120,12 @@ def generate_shape_data(n_shapes,rot_z = True, rot_y = True, xres = 64, yres = 6
             vals = within_ellipsoid(x=x_temp, y=y_temp,
                 z = z_temp, xlim = width,ylim = length,
                 zlim = height)
-            
 
             print("ellipsoid vals height:{}, width:{}, length:{}".format(
                     height, width, length))
             shape_data = np.array([z_rot, y_rot, 1, width, length, height, np.nan, np.nan, np.nan])
-            
+
+
         #if cylinder
         elif shape == 'cylinder':
             prod = 1
@@ -154,9 +145,7 @@ def generate_shape_data(n_shapes,rot_z = True, rot_y = True, xres = 64, yres = 6
                 if count > 10000:
                     raise Exception("infinite while loop")
                     break
-                
-                
-            
+
             print("cylinder vals high:{} low:{}, width:{}, length:{}".format(
                                     zmax, zmin, width, length))
 
@@ -165,7 +154,8 @@ def generate_shape_data(n_shapes,rot_z = True, rot_y = True, xres = 64, yres = 6
                 x=x_temp,y=y_temp,z=z_temp)
             
             shape_data = np.array([z_rot, y_rot, 2, width, length, zmin, zmax, np.nan, np.nan])
-            
+
+
         #if octahedron
         elif shape == 'octahedron':
             #height random between 49 and 16
@@ -185,7 +175,8 @@ def generate_shape_data(n_shapes,rot_z = True, rot_y = True, xres = 64, yres = 6
             print("octahedron vals height:{}, width:{}, length:{}".format(
                     height, width, length))
             shape_data = np.array([z_rot, y_rot, 3, width, length, height, np.nan, np.nan, np.nan])
-        
+
+
         else:
             raise Exception("shape not recognized")
         
@@ -195,15 +186,11 @@ def generate_shape_data(n_shapes,rot_z = True, rot_y = True, xres = 64, yres = 6
         #SHAPE SHIFTING
         #shift shape to floor
         vals = shift_shape_to_floor(vals)
-
-        #if randomly shift position
-            #randomly shift position
         vals, position = random_position_shift(vals)
-        
-        
         image_save_name = "/{}.png".format(str(i))
+
         #save 2d image in savedir
-        pfig(vals,x,y,z, savename=savedir + image_save_name)
+        plot_3d(vals,x,y,z, savename=savedir + image_save_name)
         gc.collect()
         
         #load, crop, remove old, save 2d image
@@ -218,6 +205,7 @@ def generate_shape_data(n_shapes,rot_z = True, rot_y = True, xres = 64, yres = 6
         shape_list_2d.append(im_crop)
         
         assert(np.sum(vals) > 100)
+
         #append vals to 3d shape list
         shape_list_3d.append(vals)
         
@@ -225,7 +213,6 @@ def generate_shape_data(n_shapes,rot_z = True, rot_y = True, xres = 64, yres = 6
         #2 position, 2 rotation, 1 shape type, 6 shape dims = length 11
         shape_data = np.concatenate([np.array(position), shape_data])
         assert(shape_data.shape[0] == 11)
-        
         shape_info_list.append(shape_data)
         
     #stack shape info, 2d, and 3d images into arrays

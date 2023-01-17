@@ -1,16 +1,10 @@
 import numpy as np
 import tensorflow as tf
-#import matplotlib.pyplot as plt
-#from pix2pix import Pix2pix
 import time
 import sys
 import os
 import csv
-#import get_metrics
 import pickle
-
-
-# example of pix2pix gan for satellite to map image-to-image translation
 from numpy import load
 from numpy import zeros
 from numpy import ones
@@ -27,8 +21,6 @@ from keras.layers import Concatenate
 from keras.layers import Dropout
 from keras.layers import BatchNormalization
 from keras.layers import LeakyReLU
-
-#from enlarged_discrim1 import *
 from bottom_up_UNET_model import *
 from tc_keras_latest import *
 
@@ -36,7 +28,6 @@ load_model = True
 model_load_path = 'models/model_66/best_model'
 
 if load_model:
-    
     d_model = keras.models.load_model(model_load_path + '/discriminator')
     g_model = keras.models.load_model(model_load_path + '/generator')
     print("models successfully loaded from file")
@@ -52,14 +43,7 @@ A_CV = prepare_2d(A_CV)
 
 cv_output, cv_rot_1_out, cv_rot_2_out, cv_shape_out = g_model.predict(A_CV)
 cv_output = inverse_transform_3d(cv_output)
-#cv loss
 cur_l1 = cv_l1_loss = np.sum(np.abs(cv_output - B_CV))
-
-#print(cv_rot_1_out)
-#print(rot_array_cv)
-#print(cv_rot_1_out * rot_array_cv[:,0])
-#cv rot accuracy
-
 
 
 cv_rot_acc_1 = np.sum((np.argmax(cv_rot_1_out, axis = 1)\
